@@ -70,7 +70,11 @@ print("logo", lg.size[0] // S, "x", lg.size[1] // S)
 # ---------- poza în benzi oblice, animată ----------
 W, H = 98 * S, 98 * S  # pătrat, cât blocul de text
 if len(sys.argv) > 1 and os.environ.get("COMPLET") == "1":  # imaginea întreagă, fără decupaj
-    src = Image.open(sys.argv[1]).convert("RGB").resize((W, H), Image.LANCZOS)
+    src = Image.open(sys.argv[1]).convert("RGB")
+    z = float(os.environ.get("ZOOM", "1"))  # >1 = logo mai mare (decupaj pătrat în jurul literelor)
+    s = min(src.size) / z
+    cx, cy = src.width * 0.495, src.height * 0.47
+    src = src.crop((int(cx - s / 2), int(cy - s / 2), int(cx + s / 2), int(cy + s / 2))).resize((W, H), Image.LANCZOS)
 elif len(sys.argv) > 1:
     src = Image.open(sys.argv[1]).convert("RGB")
     import numpy as np  # logo-ul (literele albe) intră întreg, centrat, la 90% din pătrat
@@ -101,6 +105,17 @@ def band(i, dy, gap=gap):
     return [(x0 + slant + gap / 2, dy), (x0 + bw + slant - gap / 2, dy), (x0 + bw - gap / 2, H + dy), (x0 + gap / 2, H + dy)]
 
 
+RAZA = 8 * S  # ca la bara de iconițe (border-radius 8px)
+_m = Image.new("L", (W, H), 0)
+ImageDraw.Draw(_m).rounded_rectangle([0, 0, W - 1, H - 1], radius=RAZA, fill=255)
+
+
+def colt(im):  # colțuri rotunjite, coapte pe alb (fundalul cardului)
+    out = Image.new("RGB", (W, H), (255, 255, 255))
+    out.paste(im, mask=_m)
+    return out
+
+
 frames, dur = [], []
 STEPS = 16
 for f in range(STEPS + 1):
@@ -117,7 +132,7 @@ for f in range(STEPS + 1):
         dd.polygon([(x + 6 * S, y) for x, y in band(i, 0)], fill=(232, 234, 238))
         md.polygon(band(i, dy), fill=255)
     im.paste(src, mask=mask)
-    frames.append(im.convert("P", palette=Image.ADAPTIVE, colors=128))
+    frames.append(colt(im).convert("P", palette=Image.ADAPTIVE, colors=128))
     dur.append(70)
 dur[-1] = 150
 for k in range(1, 7):  # la final benzile se lipesc: logo-ul complet, fără tăieturi
@@ -133,7 +148,7 @@ for k in range(1, 7):  # la final benzile se lipesc: logo-ul complet, fără tă
         im.paste(src, mask=mask)
     else:
         im.paste(src)
-    frames.append(im.convert("P", palette=Image.ADAPTIVE, colors=128))
+    frames.append(colt(im).convert("P", palette=Image.ADAPTIVE, colors=128))
     dur.append(80)
 dur[-1] = 5000 - sum(dur[:-1])  # o rulare la 5 s
 frames[0].save("out/poza.gif", save_all=True, append_images=frames[1:], duration=dur, loop=0, optimize=True)
