@@ -1,4 +1,4 @@
-"""Semnătura ILUSTROMANIA după designul din reel (card: bara de iconițe, text, poză în benzi oblice animate).
+﻿"""Semnătura ILUSTROMANIA după designul din reel (card: bara de iconițe, text, poză în benzi oblice animate).
 Rulare: python fa-semnatura.py [poza.jpg]  -> out/*.png, out/poza.gif
 Totul la 2x (afișat la jumătate în HTML), ca să fie clar pe telefon."""
 import sys, os
@@ -68,7 +68,7 @@ lg.save("out/logo.png")
 print("logo", lg.size[0] // S, "x", lg.size[1] // S)
 
 # ---------- poza în benzi oblice, animată ----------
-W, H = 150 * S, 130 * S
+W, H = 120 * S, 98 * S
 if len(sys.argv) > 1:
     src = Image.open(sys.argv[1]).convert("RGB")
     sc = max(W / src.width, H / src.height)
@@ -81,7 +81,7 @@ if os.environ.get("ALB_NEGRU") == "1":  # poza de om: alb-negru, ca în reel
     src = src.convert("L").convert("RGB")
 
 N = 4                 # benzi
-slant = 34 * S        # cât se înclină o bandă
+slant = 27 * S        # cât se înclină o bandă
 bw = (W + slant) / N
 gap = 5 * S
 
