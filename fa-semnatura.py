@@ -118,7 +118,7 @@ for f in range(STEPS + 1):
         md.polygon(band(i, dy), fill=255)
     im.paste(src, mask=mask)
     frames.append(im.convert("P", palette=Image.ADAPTIVE, colors=128))
-    dur.append(45)
+    dur.append(70)
 dur[-1] = 150
 for k in range(1, 7):  # la final benzile se lipesc: logo-ul complet, fără tăieturi
     g = gap * (1 - k / 6)
@@ -134,7 +134,7 @@ for k in range(1, 7):  # la final benzile se lipesc: logo-ul complet, fără tă
     else:
         im.paste(src)
     frames.append(im.convert("P", palette=Image.ADAPTIVE, colors=128))
-    dur.append(50)
-dur[-1] = 3800
+    dur.append(80)
+dur[-1] = 5000 - sum(dur[:-1])  # o rulare la 5 s
 frames[0].save("out/poza.gif", save_all=True, append_images=frames[1:], duration=dur, loop=0, optimize=True)
 print("gif", os.path.getsize("out/poza.gif") // 1024, "KB", len(frames), "cadre")
