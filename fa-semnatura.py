@@ -71,9 +71,15 @@ print("logo", lg.size[0] // S, "x", lg.size[1] // S)
 W, H = 120 * S, 98 * S
 if len(sys.argv) > 1:
     src = Image.open(sys.argv[1]).convert("RGB")
-    sc = max(W / src.width, H / src.height)
+    sc = max(W / src.width, H / src.height) * 1.12
     src = src.resize((int(src.width * sc) + 1, int(src.height * sc) + 1), Image.LANCZOS)
-    src = src.crop(((src.width - W) // 2, 0, (src.width - W) // 2 + W, H))
+    import numpy as np  # centrul = centrul literelor albe ale logo-ului
+    a = np.asarray(src).astype(int)
+    ys, xs = np.where((a > 215).all(axis=2))
+    cx, cy = (int(xs.mean()), int(ys.mean())) if len(xs) else (src.width // 2, src.height // 2)
+    x0 = max(0, min(src.width - W, cx - W // 2))
+    y0 = max(0, min(src.height - H, cy - H // 2))
+    src = src.crop((x0, y0, x0 + W, y0 + H))
 else:  # fără poză: placeholder cu inițialele
     src = Image.new("RGB", (W, H), NAVY)
     ImageDraw.Draw(src).text((W // 2, H // 2), "MO", font=font("arialbd.ttf", 40), fill=(255, 255, 255), anchor="mm")
