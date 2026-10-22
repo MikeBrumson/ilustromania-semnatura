@@ -68,8 +68,10 @@ lg.save("out/logo.png")
 print("logo", lg.size[0] // S, "x", lg.size[1] // S)
 
 # ---------- poza în benzi oblice, animată ----------
-W, H = 120 * S, 98 * S
-if len(sys.argv) > 1:
+W, H = 98 * S, 98 * S  # pătrat, cât blocul de text
+if len(sys.argv) > 1 and os.environ.get("COMPLET") == "1":  # imaginea întreagă, fără decupaj
+    src = Image.open(sys.argv[1]).convert("RGB").resize((W, H), Image.LANCZOS)
+elif len(sys.argv) > 1:
     src = Image.open(sys.argv[1]).convert("RGB")
     import numpy as np  # logo-ul (literele albe) intră întreg, centrat, la 90% din pătrat
     a = np.asarray(src).astype(int)
