@@ -71,12 +71,19 @@ print("logo", lg.size[0] // S, "x", lg.size[1] // S)
 W, H = 124 * S, 98 * S  # mai lat, aceeași înălțime cu blocurile
 if len(sys.argv) > 1 and os.environ.get("COMPLET") == "1":  # imaginea întreagă, fără decupaj
     src = Image.open(sys.argv[1]).convert("RGB")
-    z = float(os.environ.get("ZOOM", "1"))  # >1 = logo mai mare (decupaj pătrat în jurul literelor)
-    s = min(src.size) / z
-    cx, cy = src.width * 0.495, src.height * 0.47
-    sw = s * W / H if s * W / H <= src.width else src.width
-    s = sw * H / W
-    src = src.crop((int(cx - sw / 2), int(cy - s / 2), int(cx + sw / 2), int(cy + s / 2))).resize((W, H), Image.LANCZOS)
+    import numpy as np  # logo-ul alb (autocolantul) ajunge la MARGINE px de marginea slotului, scalare uniformă
+    MARGINE = int(os.environ.get("MARGINE", "15")) * S
+    a = np.asarray(src).astype(int)
+    ys, xs = np.where((a > 225).all(axis=2))
+    lx0, lx1, ly0, ly1 = (np.percentile(v, q) for v, q in ((xs, 0.5), (xs, 99.5), (ys, 0.5), (ys, 99.5)))
+    k = min((W - 2 * MARGINE) / (lx1 - lx0), (H - 2 * MARGINE) / (ly1 - ly0))  # px ieșire / px sursă
+    cw, ch = W / k, H / k  # decupajul are exact raportul slotului -> fără stretch
+    cx, cy = (lx0 + lx1) / 2, (ly0 + ly1) / 2
+    x0, y0 = min(max(0, cx - cw / 2), src.width - cw), min(max(0, cy - ch / 2), src.height - ch)
+    assert abs((cw / ch) / (W / H) - 1) < 0.01, "stretch"
+    src = src.crop((round(x0), round(y0), round(x0 + cw), round(y0 + ch))).resize((W, H), Image.LANCZOS)
+    print("logo", round((lx1 - lx0) * k / S), "x", round((ly1 - ly0) * k / S), "px in", W // S, "x", H // S,
+          "margine stg", round((lx0 - x0) * k / S), "dr", round((x0 + cw - lx1) * k / S))
 elif len(sys.argv) > 1:
     src = Image.open(sys.argv[1]).convert("RGB")
     import numpy as np  # logo-ul (literele albe) intră întreg, centrat, la 90% din pătrat
