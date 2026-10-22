@@ -77,7 +77,8 @@ if len(sys.argv) > 1:
 else:  # fără poză: placeholder cu inițialele
     src = Image.new("RGB", (W, H), NAVY)
     ImageDraw.Draw(src).text((W // 2, H // 2), "MO", font=font("arialbd.ttf", 40), fill=(255, 255, 255), anchor="mm")
-src = src.convert("L").convert("RGB")  # alb-negru, ca în reel
+if os.environ.get("ALB_NEGRU") == "1":  # poza de om: alb-negru, ca în reel
+    src = src.convert("L").convert("RGB")
 
 N = 4                 # benzi
 slant = 34 * S        # cât se înclină o bandă
