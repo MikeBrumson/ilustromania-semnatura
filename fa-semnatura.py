@@ -71,12 +71,14 @@ print("logo", lg.size[0] // S, "x", lg.size[1] // S)
 W, H = 120 * S, 98 * S
 if len(sys.argv) > 1:
     src = Image.open(sys.argv[1]).convert("RGB")
-    sc = max(W / src.width, H / src.height) * 1.12
-    src = src.resize((int(src.width * sc) + 1, int(src.height * sc) + 1), Image.LANCZOS)
-    import numpy as np  # centrul = centrul literelor albe ale logo-ului
+    import numpy as np  # logo-ul (literele albe) intră întreg, centrat, la 90% din pătrat
     a = np.asarray(src).astype(int)
     ys, xs = np.where((a > 215).all(axis=2))
-    cx, cy = (int(xs.mean()), int(ys.mean())) if len(xs) else (src.width // 2, src.height // 2)
+    lx0, lx1, ly0, ly1 = (np.percentile(v, q) for v, q in ((xs, 1), (xs, 99), (ys, 1), (ys, 99)))
+    sc = max(min(0.9 * W / (lx1 - lx0), 0.9 * H / (ly1 - ly0)), W / src.width, H / src.height)
+    src = src.resize((int(src.width * sc) + 1, int(src.height * sc) + 1), Image.LANCZOS)
+    cx, cy = int((lx0 + lx1) / 2 * sc), int((ly0 + ly1) / 2 * sc)
+    print("logo in patrat", int((lx1 - lx0) * sc) // S, "x", int((ly1 - ly0) * sc) // S, "din", W // S, "x", H // S)
     x0 = max(0, min(src.width - W, cx - W // 2))
     y0 = max(0, min(src.height - H, cy - H // 2))
     src = src.crop((x0, y0, x0 + W, y0 + H))
@@ -92,7 +94,7 @@ bw = (W + slant) / N
 gap = 5 * S
 
 
-def band(i, dy):
+def band(i, dy, gap=gap):
     x0 = i * bw - slant
     return [(x0 + slant + gap / 2, dy), (x0 + bw + slant - gap / 2, dy), (x0 + bw - gap / 2, H + dy), (x0 + gap / 2, H + dy)]
 
@@ -115,6 +117,22 @@ for f in range(STEPS + 1):
     im.paste(src, mask=mask)
     frames.append(im.convert("P", palette=Image.ADAPTIVE, colors=128))
     dur.append(45)
+dur[-1] = 150
+for k in range(1, 7):  # la final benzile se lipesc: logo-ul complet, fără tăieturi
+    g = gap * (1 - k / 6)
+    im = Image.new("RGB", (W, H), (255, 255, 255))
+    if k < 6:
+        dd = ImageDraw.Draw(im)
+        mask = Image.new("L", (W, H), 0)
+        md = ImageDraw.Draw(mask)
+        for i in range(N):
+            dd.polygon([(x + 6 * S * (1 - k / 6), y) for x, y in band(i, 0, g)], fill=(232, 234, 238))
+            md.polygon(band(i, 0, g), fill=255)
+        im.paste(src, mask=mask)
+    else:
+        im.paste(src)
+    frames.append(im.convert("P", palette=Image.ADAPTIVE, colors=128))
+    dur.append(50)
 dur[-1] = 3800
 frames[0].save("out/poza.gif", save_all=True, append_images=frames[1:], duration=dur, loop=0, optimize=True)
 print("gif", os.path.getsize("out/poza.gif") // 1024, "KB", len(frames), "cadre")
