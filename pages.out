@@ -4,3 +4,8 @@ rc=4
 warning: in the working copy of 'card.html', LF will be replaced by CRLF the next time Git touches it
 warning: in the working copy of 'fa-semnatura.py', LF will be replaced by CRLF the next time Git touches it
 warning: in the working copy of 'pages.out', LF will be replaced by CRLF the next time Git touches it
+PAGES PICAT: MikeBrumson/ilustromania-semnatura 9ad6239 — Page build failed.. NU e urcat; repara build-ul (ex. .nojekyll), nu raporta «urcat».
+rc=3
+ LF will be replaced by CRLF the next time Git touches it
+PAGES NETERMINAT: MikeBrumson/ilustromania-semnatura baace02 stare «building» dupa 90s — nu raporta «urcat».
+rc=4

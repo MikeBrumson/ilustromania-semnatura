@@ -135,7 +135,9 @@ def colt(im):  # colțuri rotunjite, coapte pe alb (fundalul cardului)
 
 frames, dur = [], []
 STEPS = 16
+maxd = []
 for f in range(STEPS + 1):
+    md_ = 0
     im = Image.new("RGB", (W, H), (255, 255, 255))
     dd = ImageDraw.Draw(im)
     mask = Image.new("L", (W, H), 0)
@@ -148,10 +150,13 @@ for f in range(STEPS + 1):
         # umbra gri a benzii (rămâne fixă, ca în reel)
         dd.polygon([(x + 6 * S, y) for x, y in band(i, 0)], fill=(232, 234, 238))
         md.polygon(band(i, dy), fill=255)
+        md_ = max(md_, abs(dy))
     im.paste(src, mask=mask)
     frames.append(colt(im).convert("P", palette=Image.ADAPTIVE, colors=128))
     dur.append(70)
-frames.pop(); dur.pop()  # cadrul cu benzile așezate + linii albe dispare: imaginea plină vine imediat
+    maxd.append(md_)
+while maxd[-1] < 8 * S:  # benzile par așezate: liniile albe nu mai stau, vine imediat imaginea plină
+    frames.pop(); dur.pop(); maxd.pop()  # cadrul cu benzile așezate + linii albe dispare: imaginea plină vine imediat
 for k in (6,):  # instant: la final benzile se lipesc: logo-ul complet, fără tăieturi
     g = gap * (1 - k / 6)
     im = Image.new("RGB", (W, H), (255, 255, 255))
