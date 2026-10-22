@@ -68,13 +68,15 @@ lg.save("out/logo.png")
 print("logo", lg.size[0] // S, "x", lg.size[1] // S)
 
 # ---------- poza în benzi oblice, animată ----------
-W, H = 98 * S, 98 * S  # pătrat, cât blocul de text
+W, H = 124 * S, 98 * S  # mai lat, aceeași înălțime cu blocurile
 if len(sys.argv) > 1 and os.environ.get("COMPLET") == "1":  # imaginea întreagă, fără decupaj
     src = Image.open(sys.argv[1]).convert("RGB")
     z = float(os.environ.get("ZOOM", "1"))  # >1 = logo mai mare (decupaj pătrat în jurul literelor)
     s = min(src.size) / z
     cx, cy = src.width * 0.495, src.height * 0.47
-    src = src.crop((int(cx - s / 2), int(cy - s / 2), int(cx + s / 2), int(cy + s / 2))).resize((W, H), Image.LANCZOS)
+    sw = s * W / H if s * W / H <= src.width else src.width
+    s = sw * H / W
+    src = src.crop((int(cx - sw / 2), int(cy - s / 2), int(cx + sw / 2), int(cy + s / 2))).resize((W, H), Image.LANCZOS)
 elif len(sys.argv) > 1:
     src = Image.open(sys.argv[1]).convert("RGB")
     import numpy as np  # logo-ul (literele albe) intră întreg, centrat, la 90% din pătrat
