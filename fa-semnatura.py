@@ -151,7 +151,7 @@ for f in range(STEPS + 1):
     im.paste(src, mask=mask)
     frames.append(colt(im).convert("P", palette=Image.ADAPTIVE, colors=128))
     dur.append(70)
-dur[-1] = 150
+frames.pop(); dur.pop()  # cadrul cu benzile așezate + linii albe dispare: imaginea plină vine imediat
 for k in (6,):  # instant: la final benzile se lipesc: logo-ul complet, fără tăieturi
     g = gap * (1 - k / 6)
     im = Image.new("RGB", (W, H), (255, 255, 255))
