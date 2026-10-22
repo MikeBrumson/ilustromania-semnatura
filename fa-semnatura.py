@@ -71,19 +71,27 @@ print("logo", lg.size[0] // S, "x", lg.size[1] // S)
 W, H = 124 * S, 98 * S  # mai lat, aceeași înălțime cu blocurile
 if len(sys.argv) > 1 and os.environ.get("COMPLET") == "1":  # imaginea întreagă, fără decupaj
     src = Image.open(sys.argv[1]).convert("RGB")
-    import numpy as np  # logo-ul alb (autocolantul) ajunge la MARGINE px de marginea slotului, scalare uniformă
-    MARGINE = int(os.environ.get("MARGINE", "15")) * S
-    a = np.asarray(src).astype(int)
-    ys, xs = np.where((a > 225).all(axis=2))
-    lx0, lx1, ly0, ly1 = (np.percentile(v, q) for v, q in ((xs, 0.5), (xs, 99.5), (ys, 0.5), (ys, 99.5)))
-    k = min((W - 2 * MARGINE) / (lx1 - lx0), (H - 2 * MARGINE) / (ly1 - ly0))  # px ieșire / px sursă
-    cw, ch = W / k, H / k  # decupajul are exact raportul slotului -> fără stretch
-    cx, cy = (lx0 + lx1) / 2, (ly0 + ly1) / 2
-    x0, y0 = min(max(0, cx - cw / 2), src.width - cw), min(max(0, cy - ch / 2), src.height - ch)
-    assert abs((cw / ch) / (W / H) - 1) < 0.01, "stretch"
-    src = src.crop((round(x0), round(y0), round(x0 + cw), round(y0 + ch))).resize((W, H), Image.LANCZOS)
-    print("logo", round((lx1 - lx0) * k / S), "x", round((ly1 - ly0) * k / S), "px in", W // S, "x", H // S,
-          "margine stg", round((lx0 - x0) * k / S), "dr", round((x0 + cw - lx1) * k / S))
+    if os.environ.get("CHENAR"):  # decupaj dat de Mihai (x0,y0,x1,y1 în sursă); slotul ia raportul lui
+        x0, y0, x1, y1 = map(int, os.environ["CHENAR"].split(","))
+        W = S * round(H / S * (x1 - x0) / (y1 - y0))
+        y1 = y0 + round((x1 - x0) * H / W)
+        assert abs(((x1 - x0) / (y1 - y0)) / (W / H) - 1) < 0.01, "stretch"
+        src = src.crop((x0, y0, x1, y1)).resize((W, H), Image.LANCZOS)
+        print("chenar", x1 - x0, "x", y1 - y0, "-> slot", W // S, "x", H // S)
+    else:
+        import numpy as np  # logo-ul alb (autocolantul) ajunge la MARGINE px de marginea slotului, scalare uniformă
+        MARGINE = int(os.environ.get("MARGINE", "15")) * S
+        a = np.asarray(src).astype(int)
+        ys, xs = np.where((a > 225).all(axis=2))
+        lx0, lx1, ly0, ly1 = (np.percentile(v, q) for v, q in ((xs, 0.5), (xs, 99.5), (ys, 0.5), (ys, 99.5)))
+        k = min((W - 2 * MARGINE) / (lx1 - lx0), (H - 2 * MARGINE) / (ly1 - ly0))  # px ieșire / px sursă
+        cw, ch = W / k, H / k  # decupajul are exact raportul slotului -> fără stretch
+        cx, cy = (lx0 + lx1) / 2, (ly0 + ly1) / 2
+        x0, y0 = min(max(0, cx - cw / 2), src.width - cw), min(max(0, cy - ch / 2), src.height - ch)
+        assert abs((cw / ch) / (W / H) - 1) < 0.01, "stretch"
+        src = src.crop((round(x0), round(y0), round(x0 + cw), round(y0 + ch))).resize((W, H), Image.LANCZOS)
+        print("logo", round((lx1 - lx0) * k / S), "x", round((ly1 - ly0) * k / S), "px in", W // S, "x", H // S,
+              "margine stg", round((lx0 - x0) * k / S), "dr", round((x0 + cw - lx1) * k / S))
 elif len(sys.argv) > 1:
     src = Image.open(sys.argv[1]).convert("RGB")
     import numpy as np  # logo-ul (literele albe) intră întreg, centrat, la 90% din pătrat
@@ -144,7 +152,7 @@ for f in range(STEPS + 1):
     frames.append(colt(im).convert("P", palette=Image.ADAPTIVE, colors=128))
     dur.append(70)
 dur[-1] = 150
-for k in range(1, 7):  # la final benzile se lipesc: logo-ul complet, fără tăieturi
+for k in (6,):  # instant: la final benzile se lipesc: logo-ul complet, fără tăieturi
     g = gap * (1 - k / 6)
     im = Image.new("RGB", (W, H), (255, 255, 255))
     if k < 6:
